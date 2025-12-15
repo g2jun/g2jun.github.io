@@ -1,1 +1,1 @@
-# g2jun.github.io
+[rust.md](rust)
