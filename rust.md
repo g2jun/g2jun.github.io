@@ -112,6 +112,7 @@ Making references is called borrowing in Rust, it is the main form of aliasing. 
 
 > * At any given time, you can have either one mutable reference or any number of immutable references.
 > * References must always be valid.
+
 - [The Rules of References](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html#the-rules-of-references)
 
 To elaborate on the rules above:
@@ -129,16 +130,16 @@ To elaborate on the rules above:
 * When a reference itself is borrowed, it sometimes *forfeits* some of its permissions during the borrow of itself.
 
   * When a mutable reference is borrowed as mutable again, this new mutable reference takes both write and read permissions from the original reference and becomes the only one who has access to the memory location the original reference refers to. The original reference becomes unusable during the lifetime of this new mutable borrow.
-  * When a mutable reference is borrowed as immutable, it shares the read permission with the new immutable reference and forfeits its write permission during the lifetime of this new immutable borrow.
-  * When an immutable reference is borrowed as immutable again, it shares its read permission with the new borrow. If it is borrowed as mutable, the mutable borrow takes the read permission and renders the original reference unusable during the lifetime of this new borrow.
+  * When a mutable reference is borrowed as immutable, it shares the read permission with the new immutable reference and forfeits its write permission during the lifetime of this new immutable borrow. However, the memory location the mutable reference refers to is still considered to be borrowed as mutable, so it cannot be accessed directly.
+  * When an immutable reference is borrowed as immutable again, it shares its read permission with the new borrow. If it is borrowed as mutable, the mutable borrow takes the read permission and renders the original reference unusable during the lifetime of this new borrow; however, the memory location the immutable reference refers to is still borrowed as immutable, so it can be accessed directly itself.
 
-* If a reference `r` borrows a variable `v` (`r = &v` or `r = &mut v`), and then a variable `b` borrows the *dereferencing* of `r` (`b = & *r` or `b = &mut *r`), we can consider the reference `r` is live during the lifetime of `b`, which means the variable `v` is borrowed during the lifetime of `b`. Whether it is borrowed as mutable or immutable is still determined by `r`, who borrowed it originally.
+* If a reference `r` borrows a variable `v` (`r = &v` or `r = &mut v`), and then a variable `b` borrows the *dereferencing* of `r` (`b = & *r` or `b = &mut *r`), not only should we consider the result of dereferencing (`*r`) borrowed, but we should also consider the reference `r` is live during the lifetime of `b`, which means the variable `v` is borrowed during the lifetime of `b`. Whether it is borrowed as mutable or immutable is still determined by `r`, who borrowed it originally.
 
 * If a reference `r` is dereferenced multiple times and then get borrowed by `b`, we need to do the analysis recursively.
   1. Remove one layer of dereference from the expression being borrowed.
      For example, if `b = & **r` or `b = &mut **r`, the expression being borrowed is `**r`. Removing one layer of dereference results in `*r`.
   2. Consider the reference in the resulting expression (e.g., `*r` or `r`) from step one to be live during the lifetime of `b`, which means the variable borrowed by it is still borrowed during the lifetime of `b`. If the result is no longer a dereference expression, the analysis is done.
-  3. Inspect the type of the resulting reference from step one. If it is an *immutable* reference, the analysis is done. Otherwise, substitute the result for the expression being borrowed and go back to step one.
+  3. Inspect the type of the resulting reference from step one. If it is an *immutable* reference, the analysis is done. Otherwise, we should consider the resulting reference (e.g., `*r` or `r`) borrowed and substitute it for the expression being borrowed in step one and start again.
   - [Reborrow constrains](https://rust-lang.github.io/rfcs/2094-nll.html#reborrow-constraints)
 
 ## Glossary
