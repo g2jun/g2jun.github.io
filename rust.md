@@ -19,35 +19,35 @@ There are two exceptions though.
 
 ### Exception one: `Copy` types are not moved
 
-1. If the type of a value implements `Copy`, then the value will not be moved, but *copied* bit by bit, also known as a shallow copy.
-   - [Moved and copied types](https://doc.rust-lang.org/reference/expressions.html#moved-and-copied-types)
-   - [Special types and traits](https://doc.rust-lang.org/reference/special-types-and-traits.html#copy)
-   - [Trait Copy](https://doc.rust-lang.org/core/marker/trait.Copy.html)
+* If the type of a value implements `Copy`, then the value will not be moved, but *copied* bit by bit, also known as a shallow copy.
+  - [Moved and copied types](https://doc.rust-lang.org/reference/expressions.html#moved-and-copied-types)
+  - [Special types and traits](https://doc.rust-lang.org/reference/special-types-and-traits.html#copy)
+  - [Trait Copy](https://doc.rust-lang.org/core/marker/trait.Copy.html)
 
-   The Rust compiler implements `Copy` for some types:
+  The Rust compiler implements `Copy` for some types:
 
-   * Scalar types: integers, floats, `bool` and `char`.
-   * Tuples, if all elements are `Copy` types
-   * Arrays of `Copy` types
-     - [Primitive Type array](https://doc.rust-lang.org/core/primitive.array.html)
-   * Shared references (`&T`)
-     - [Shared references (&)](https://doc.rust-lang.org/reference/types/pointer.html#r-type.pointer.reference.shared.copy)
-     * Mutable references are *not* `Copy` because a value can only have one of them at a time.
-       -[Mutable References (&mut)](https://doc.rust-lang.org/reference/types/pointer.html#r-type.pointer.reference.mut.copy)
+  * Scalar types: integers, floats, `bool` and `char`.
+  * Tuples, if all elements are `Copy` types
+  * Arrays of `Copy` types
+    - [Primitive Type array](https://doc.rust-lang.org/core/primitive.array.html)
+  * Shared references (`&T`)
+    - [Shared references (&)](https://doc.rust-lang.org/reference/types/pointer.html#r-type.pointer.reference.shared.copy)
+    * Mutable references are *not* `Copy` because a value can only have one of them at a time.
+      - [Mutable References (&mut)](https://doc.rust-lang.org/reference/types/pointer.html#r-type.pointer.reference.mut.copy)
 
-   As a rule of thumb, values that can be entirely stored on the stack can be copied shallowly. When their owners go out of scope, their memory will be deallocated altogether with the stack frame. No heap allocation or deallocation is involved.
-   - [Stack-Only Data: Copy](https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html#stack-only-data-copy)
+  As a rule of thumb, values that can be entirely stored on the stack can be copied shallowly. When their owners go out of scope, their memory will be deallocated altogether with the stack frame. No heap allocation or deallocation is involved.
+  - [Stack-Only Data: Copy](https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html#stack-only-data-copy)
 
-   `Copy` and `Drop` are mutually exclusive. Copying a `Drop` type may lead to a double free, it is hard for the compiler to correctly decide when to run the destructors. So it is not allowed to implement `Copy` on a type if the type or any of its parts has implemented `Drop`.
-   - [Trait Drop](https://doc.rust-lang.org/core/ops/trait.Drop.html#copy-and-drop-are-exclusive)
-   - [Trait Copy](https://doc.rust-lang.org/core/marker/trait.Copy.html#when-cant-my-type-be-copy)
+  `Copy` and `Drop` are mutually exclusive. Copying a `Drop` type may lead to a double free, it is hard for the compiler to correctly decide when to run the destructors. So it is not allowed to implement `Copy` on a type if the type or any of its parts has implemented `Drop`.
+  - [Trait Drop](https://doc.rust-lang.org/core/ops/trait.Drop.html#copy-and-drop-are-exclusive)
+  - [Trait Copy](https://doc.rust-lang.org/core/marker/trait.Copy.html#when-cant-my-type-be-copy)
 
 ### Exception two: A value cannot be moved out from behind a reference
 
-2. References are *non-owning* pointers. They do not own the values they point to, instead they are said to *borrow* them. By dereferencing a reference, we can access the value it borrows, but we cannot move it.
-   - [References (& and &mut)](https://doc.rust-lang.org/reference/types/pointer.html#references--and-mut)
-   - [Borrow operators](https://doc.rust-lang.org/reference/expressions/operator-expr.html#borrow-operators)
-   - [The dereference operator](https://doc.rust-lang.org/reference/expressions/operator-expr.html#the-dereference-operator)
+* References are *non-owning* pointers. They do not own the values they point to, instead they are said to *borrow* them. By dereferencing a reference, we can access the value it borrows, but we cannot move it.
+  - [References (& and &mut)](https://doc.rust-lang.org/reference/types/pointer.html#references--and-mut)
+  - [Borrow operators](https://doc.rust-lang.org/reference/expressions/operator-expr.html#borrow-operators)
+  - [The dereference operator](https://doc.rust-lang.org/reference/expressions/operator-expr.html#the-dereference-operator)
 
 ### Partial move of compound types
 
@@ -68,15 +68,16 @@ Some types are compound types, meaning they can group multiple values into one t
 ## Summary of rules on ownership
 
 The Brown book clearly states that "ownership is primarily a discipline of heap management." Therefore, its rules specify that each *heap* value must be owned by exactly one variable and be deallocated once this variable goes out of scope. The official book seems to generalize the ownership rules to cover all values not limited to heap. Since stack-only values do not need to manage heap memory and they are copied rather than moved, meaning ownerships are never transferred but only created on copy, the same rules can apply to them without change. So the ownership rules listed in the official book are:
-
 > * Each value in Rust has an owner.
 > * There can only be one owner at a time.
     - With the exception of [Rc<T>, the Reference Counted Smart Pointer](https://doc.rust-lang.org/book/ch15-04-rc.html).
 > * When the owner goes out of scope, the value will be dropped.
+
 - [The Rust Programming Language](https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html#ownership-rules)
 
 The Brown book adds another one:
 > * Heap data can only be accessed through its current owner, not a previous owner.
+
 - [The Rust Programming Language, Brown Version](https://rust-book.cs.brown.edu/ch04-01-what-is-ownership.html#summary)
 This is for memory safety. Because the current owner can be dropped, the memory of the owned value can be deallocated, leaving the previous owner to point to deallocated memory. Accessing deallocated memory is a memory safety error called "use after free".
 
@@ -95,7 +96,7 @@ This is for memory safety. Because the current owner can be dropped, the memory 
 
 # Aliasing XOR Mutability
 
-XOR stands for eXclusive OR, meaning A or B, but not both, so aliasing and mutability cannot exist at the same time. The purpose of this principle is to improve memory safety and avoid data races.
+XOR stands for "eXclusive OR", meaning A or B, but not both, so aliasing and mutability cannot exist at the same time. The purpose of this principle is to improve memory safety and avoid data races.
 
 When two variables refer to the same memory location, these two variables are aliasing, then neither one of them should be mutated, because mutation may cause deallocation of the current memory (think of resizing a vector), leaving the other variable to point to deallocated memory, which will lead to a memory safety error called "use after free".
 
@@ -140,6 +141,7 @@ To elaborate on the rules above:
      For example, if `b = & **r` or `b = &mut **r`, the expression being borrowed is `**r`. Removing one layer of dereference results in `*r`.
   2. Consider the reference in the resulting expression (e.g., `*r` or `r`) from step one to be live during the lifetime of `b`, which means the variable borrowed by it is still borrowed during the lifetime of `b`. If the result is no longer a dereference expression, the analysis is done.
   3. Inspect the type of the resulting reference from step one. If it is an *immutable* reference, the analysis is done. Otherwise, we should consider the resulting reference (e.g., `*r` or `r`) borrowed and substitute it for the expression being borrowed in step one and start again.
+
   - [Reborrow constrains](https://rust-lang.github.io/rfcs/2094-nll.html#reborrow-constraints)
 
 ## Glossary
