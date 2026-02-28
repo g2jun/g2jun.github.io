@@ -7,7 +7,7 @@ Stack memory is managed automatically, but only if a value has a fixed size and 
 The main purpose of ownership is to enable automatic management of heap memory without using a runtime garbage collector. Therefore, every value stored in the heap must have an owner. When the owner is not accessible anymore, the value it owns in the heap must not be accessible either, and the memory used to store that value should be deallocated. However, if one value has two owners, both of them will try to deallocate its memory (unless they are doing reference counting at runtime), which will cause a memory safety error called "double free". Therefore, there should be only one owner responsible for deallocation at a time.
 
 A variable holds a value directly. Whether the value is a piece of data we can use directly or it is an address pointing to a memory location in the heap (or stack), it has a fixed size, so it can be stored on the stack. Memory on the stack is managed in frames, and variables in a single scope are stored in a single frame. When a variable goes out of scope, in other words, the variable's scope ends, the stack frame for this scope is deallocated automatically, so the variable is not accessible anymore. If the variable owns a value in the heap, the memory occupied by that value needs to be deallocated. If that value owns another value, then the deallocation needs to be done recursively. Rust handles this memory cleanup process by running the destructor of the variable automatically when it goes out of scope. Thereafter, that variable is said to be *dropped*.
-- [The Rust Programming Language, Brown Version](https://rust-book.cs.brown.edu/ch04-01-what-is-ownership.html#variables-live-in-the-stack)
+- [Variables Live in the Stack](https://rust-book.cs.brown.edu/ch04-01-what-is-ownership.html#variables-live-in-the-stack)
 - [Destructors](https://doc.rust-lang.org/reference/destructors.html)
 - [Trait Drop](https://doc.rust-lang.org/core/ops/trait.Drop.html)
 
@@ -63,34 +63,35 @@ Some types are compound types, meaning they can group multiple values into one t
   - [Field access expressions](https://doc.rust-lang.org/reference/expressions/field-expr.html#borrowing)
 
 * `Vec<T>` elements *cannot* be moved out of the vector, just like arrays. From the implementation's perspective, an index expression `a[b]` is equivalent to `*std::ops::Index::index(&a, b)`, or `*std::ops::IndexMut::index_mut(&mut a, b)` in a mutable place expression context. That means indexing a vector borrows the vector as a whole and returns a reference to an element, the result then gets dereferenced. As mentioned above, dereferencing a reference cannot move the value behind the reference.
-  - [index expression](https://doc.rust-lang.org/reference/expressions/array-expr.html#r-expr.array.index.trait)
+  - [Index expression](https://doc.rust-lang.org/reference/expressions/array-expr.html#r-expr.array.index.trait)
 
 ## Summary of rules on ownership
 
 The Brown book clearly states that "ownership is primarily a discipline of heap management." Therefore, its rules specify that each *heap* value must be owned by exactly one variable and be deallocated once this variable goes out of scope. The official book seems to generalize the ownership rules to cover all values not limited to heap. Since stack-only values do not need to manage heap memory and they are copied rather than moved, meaning ownerships are never transferred but only created on copy, the same rules can apply to them without change. So the ownership rules listed in the official book are:
 > * Each value in Rust has an owner.
 > * There can only be one owner at a time.
-    - With the exception of [Rc<T>, the Reference Counted Smart Pointer](https://doc.rust-lang.org/book/ch15-04-rc.html).
+    - With the exception of [`Rc<T>`, the Reference Counted Smart Pointer](https://doc.rust-lang.org/book/ch15-04-rc.html).
 > * When the owner goes out of scope, the value will be dropped.
 
-- [The Rust Programming Language](https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html#ownership-rules)
+- [Ownership Rules](https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html#ownership-rules)
 
 The Brown book adds another one:
 > * Heap data can only be accessed through its current owner, not a previous owner.
 
-- [The Rust Programming Language, Brown Version](https://rust-book.cs.brown.edu/ch04-01-what-is-ownership.html#summary)
+- [What is Ownership?](https://rust-book.cs.brown.edu/ch04-01-what-is-ownership.html#summary)
+
 This is for memory safety. Because the current owner can be dropped, the memory of the owned value can be deallocated, leaving the previous owner to point to deallocated memory. Accessing deallocated memory is a memory safety error called "use after free".
 
 ## Glossary
 
 * Variable: A variable is a component of a stack frame, and it holds a value directly.
-  - [The Rust Reference](https://doc.rust-lang.org/reference/variables.html)
+  - [Variables](https://doc.rust-lang.org/reference/variables.html)
 
 * Scope: the region of source code where a variable may be accessed by its name.
-  - [The Rust Reference](https://doc.rust-lang.org/reference/glossary.html#scope)
+  - [Scope](https://doc.rust-lang.org/reference/glossary.html#scope)
 
 * The scope of a variable is the block it is defined in. A block is a syntax group enclosed by `{` and `}`.
-  - [The Rust Programming Language, First Edition](https://doc.rust-lang.org/1.30.0/book/first-edition/variable-bindings.html#scope-and-shadowing)
+  - [Scope and shadowing](https://doc.rust-lang.org/1.30.0/book/first-edition/variable-bindings.html#scope-and-shadowing)
   - [Pattern binding scopes](https://doc.rust-lang.org/reference/names/scopes.html#pattern-binding-scopes)
   - [Block expressions](https://doc.rust-lang.org/reference/expressions/block-expr.html)
 
@@ -148,7 +149,7 @@ To elaborate on the rules above:
 
 * Aliasing: variables and pointers referring to overlapping regions of memory.
   - [Rust Avoids Simultaneous Aliasing and Mutation](https://rust-book.cs.brown.edu/ch04-02-references-and-borrowing.html#rust-avoids-simultaneous-aliasing-and-mutation)
-  - [The Rustonomicon](https://doc.rust-lang.org/nomicon/aliasing.html)
+  - [Aliasing](https://doc.rust-lang.org/nomicon/aliasing.html)
 
 * Reference: A reference is like a pointer in that it's an address we can follow to access the data stored at that address; that data is owned by some other variable. Unlike a pointer, a reference is guaranteed to point to a valid value of a particular type for the life of that reference.
   - [References and Borrowing](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html)
@@ -156,5 +157,5 @@ To elaborate on the rules above:
 * Lifetime:
   * For a reference, its lifetime starts from where it is introduced and ends after where it is *last used*.
   * For a value, its lifetime starts from where it is constructed and ends when it is dropped. It is also called the scope of the value.
-  - [The Rust Programming Language, Brown Version](https://rust-book.cs.brown.edu/ch04-02-references-and-borrowing.html#permissions-are-returned-at-the-end-of-a-references-lifetime)
-  - [The Rust RFC Book](https://rust-lang.github.io/rfcs/2094-nll.html#what-is-a-lifetime)
+  - [End of a Reference's Lifetime](https://rust-book.cs.brown.edu/ch04-02-references-and-borrowing.html#permissions-are-returned-at-the-end-of-a-references-lifetime)
+  - [What is a lifetime?](https://rust-lang.github.io/rfcs/2094-nll.html#what-is-a-lifetime)
